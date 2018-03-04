@@ -1,11 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ DEFAULT_LANG }}">
 
   {% include "includes/head.html" %}
+  {% include "includes/navbar.html" %}
   {% include "includes/header.html" %}
 
-  <body></body>
-
-  {% include "includes/footer.html" %}
+  <body>
+    {% if article %}
+    <article>
+    {% endif %}
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+          {% block content %}{% endblock %}
+        </div>
+        </div>
+    </div>
+    {% if article %}
+    </article>
+    {% endif %}
+    <hr>
+    {% include "includes/footer.html" %}
+  </body>
 
 </html>
