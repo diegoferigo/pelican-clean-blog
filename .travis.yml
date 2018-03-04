@@ -1,0 +1,54 @@
+sudo: false
+dist: trusty
+language: cpp
+
+os:
+  - linux
+
+matrix:
+  include:
+    # Enable a job for building the static website
+    - os: linux
+      env:
+        TRAVIS_DEPLOY_GHPAGES=true
+        COMMITTER_USERNAME=diegoferigo
+        AUTHOR_NAME="Diego Ferigo"
+        AUTHOR_EMAIL="dgferigo@gmail.com"
+      addons:
+        apt:
+          packages:
+            - python3-pip
+            - uglifyjs
+
+#before_install:
+
+before_script:
+  # Clone again the repository, because Travis clones using --depth
+  - cd $HOME
+  - git clone https://github.com/$TRAVIS_REPO_SLUG.git $HOME/$TRAVIS_REPO_SLUG
+
+script:
+  - export PATH=$HOME/.local/bin:$PATH
+  - pip3 install --user pelican markdown webassets scss cssmin
+  - cd $HOME/$TRAVIS_REPO_SLUG
+  - git checkout gh-pages
+  - git submodule init
+  - git submodule update
+  - git submodule foreach git pull origin master
+  - make publish
+
+after_success:
+  # Push the generated website to the gh-pages branch
+  - git remote add origin-tokenized https://$COMMITTER_USERNAME:$DEPLOY_TOKEN@github.com/$TRAVIS_REPO_SLUG
+  - >-
+    if [[ "$TRAVIS_BRANCH" = "master" && -n "$TRAVIS_DEPLOY_GHPAGES" && "$TRAVIS_PULL_REQUEST" = "false" ]] ; then
+      git add --all . 
+      git commit --author "$AUTHOR_NAME <$AUTHOR_EMAIL>" \
+          -m "Automatic deployment Travis#${TRAVIS_BUILD_NUMBER}" \
+          -m "Commit: https://github.com/$TRAVIS_REPO_SLUG/commit/$TRAVIS_COMMIT"
+      git push origin-tokenized gh-pages
+    fi
+
+notifications:
+  email:
+    - dgferigo@gmail.com
